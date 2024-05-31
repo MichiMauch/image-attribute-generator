@@ -4,6 +4,11 @@ import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
 
+// Nur im Entwicklungsmodus dotenv laden
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
 // Multer Setup
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -17,6 +22,17 @@ export const config = {
 };
 
 const uploadMiddleware = upload.single('image');
+
+// Pfad zu den Google Cloud Anmeldedaten setzen
+let credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
+if (process.env.GOOGLE_CLOUD_CREDENTIALS_JSON) {
+  // Auf Vercel: Temporäre Datei für Google Cloud Anmeldedaten erstellen
+  credentialsPath = '/tmp/service-account-file.json';
+  fs.writeFileSync(credentialsPath, process.env.GOOGLE_CLOUD_CREDENTIALS_JSON);
+}
+
+process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsPath;
 
 // Google Cloud Vision API-Client initialisieren
 const client = new vision.ImageAnnotatorClient();
@@ -43,7 +59,7 @@ const handler = async (req, res) => {
     // Step 1: Generate a description for the image using Google Cloud Vision API
     const [result] = await client.labelDetection(req.file.buffer);
     const labels = result.labelAnnotations.map(label => label.description);
-    
+
     // Create a prompt using the detected labels
     const descriptionPrompt = `Beschreibe ein Bild, das die folgenden Elemente enthält: ${labels.join(', ')}.`;
 
