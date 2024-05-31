@@ -129,7 +129,7 @@ const handler = async (req, res) => {
       .replace(/[^a-z0-9]/gi, '_')
       .toLowerCase();
 
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    const uploadsDir = '/tmp/uploads';
     const filename = `${sanitizedTitle}.jpg`;
     const filepath = path.join(uploadsDir, filename);
 
@@ -143,7 +143,7 @@ const handler = async (req, res) => {
     return res.status(200).json({
       title,
       alt,
-      downloadUrl: `/uploads/${filename}`
+      downloadUrl: `/api/download?filename=${filename}`
     });
   } catch (error) {
     console.error("Error:", error);
